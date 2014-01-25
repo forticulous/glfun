@@ -41,6 +41,34 @@ void idle(void)
     glutPostRedisplay();
 }
 
+int arrLen(char array[])
+{
+    return sizeof(array) / sizeof(array[0]);
+}
+
+char* fileToString(const char* shaderPath)
+{
+    char returnVal[1000];
+    char buff[1000];
+
+    FILE *file = fopen(shaderPath, "r");
+    if (!file)
+        printf("Failed to open file\n");
+
+    while (fgets(buff, arrLen(buff), file) != NULL)
+        strcat(returnVal, buff);
+
+    fclose(file);
+    return returnVal;
+}
+
+GLuint initShader(const char* vertexShaderPath)
+{
+    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+
+    char* vertexShaderCode = fileToString(vertexShaderPath);
+}
+
 int main(int argc, char** argv)
 {
     glutInit(&argc, argv);
@@ -54,7 +82,9 @@ int main(int argc, char** argv)
     glewInit();
 
     printf("OpenGL version: %s\n", glGetString(GL_VERSION));
+    printf("GLSL version: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
     initVertexBuffer();
+    initShader("vs.glsl");
 
     glutMainLoop();
     return 0;
