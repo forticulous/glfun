@@ -86,10 +86,9 @@ void initShader(const char* vertexShaderPath)
 {
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 
-    const char *vertexShaderCode = fileToString(vertexShaderPath);
+    char *vertexShaderCode = fileToString(vertexShaderPath);
 
-    glShaderSource(vertexShader, 1, &vertexShaderCode, NULL);
-    free((char*)vertexShaderCode);
+    glShaderSource(vertexShader, 1, (const char**)&vertexShaderCode, NULL);
     glCompileShader(vertexShader);
 
     program = glCreateProgram();
@@ -97,6 +96,7 @@ void initShader(const char* vertexShaderPath)
     glLinkProgram(program);
 
     glDeleteShader(vertexShader);
+    free(vertexShaderCode);
 }
 
 int main(int argc, char** argv)
