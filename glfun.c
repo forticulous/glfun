@@ -89,6 +89,7 @@ void initShader(const char* vertexShaderPath)
     const char *vertexShaderCode = fileToString(vertexShaderPath);
 
     glShaderSource(vertexShader, 1, &vertexShaderCode, NULL);
+    free((char*)vertexShaderCode);
     glCompileShader(vertexShader);
 
     program = glCreateProgram();
