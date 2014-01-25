@@ -10,7 +10,7 @@ const float vertices[] = {
 
 GLuint vertexBuffer;
 
-void initVertexBuffer()
+void initVertexBuffer(void)
 {
     glGenBuffers(1, &vertexBuffer);
     
@@ -19,9 +19,9 @@ void initVertexBuffer()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void render()
+void render(void)
 {
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
@@ -31,17 +31,25 @@ void render()
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
     glDisableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     glutSwapBuffers();
 }
 
-int main(int argcp, char** argv)
+void idle(void)
 {
-    glutInit(&argcp, argv);
+    glutPostRedisplay();
+}
+
+int main(int argc, char** argv)
+{
+    glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
     glutInitWindowSize(400, 300);
     glutCreateWindow("Hello World");
-    glutDisplayFunc(&render);
+
+    glutDisplayFunc(render);
+    glutIdleFunc(idle);
 
     glewInit();
 
