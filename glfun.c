@@ -1,3 +1,4 @@
+#include <string.h>
 #include <stdio.h>
 #include <GL/glew.h>
 #include <GL/glut.h>
@@ -9,6 +10,7 @@ const float vertices[] = {
 };
 
 GLuint vertexBuffer;
+GLuint program;
 
 void initVertexBuffer(void)
 {
@@ -24,14 +26,16 @@ void render(void)
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    glUseProgram(program);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
     glDisableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glUseProgram(0);
 
     glutSwapBuffers();
 }
@@ -46,27 +50,52 @@ int arrLen(char array[])
     return sizeof(array) / sizeof(array[0]);
 }
 
-char* fileToString(const char* shaderPath)
+char *fileToString(const char *path)
 {
-    char returnVal[1000];
-    char buff[1000];
-
-    FILE *file = fopen(shaderPath, "r");
-    if (!file)
-        printf("Failed to open file\n");
-
-    while (fgets(buff, arrLen(buff), file) != NULL)
-        strcat(returnVal, buff);
-
-    fclose(file);
-    return returnVal;
+    FILE *fd;
+    long len, r;
+    char *str;
+ 
+    if (!(fd = fopen(path, "r")))
+    {
+        fprintf(stderr, "Can't open file '%s' for reading\n", path);
+        return NULL;
+    }
+ 
+    fseek(fd, 0, SEEK_END);
+    len = ftell(fd);
+ 
+    fseek(fd, 0, SEEK_SET);
+ 
+    if (!(str = malloc(len * sizeof(char))))
+    {
+        fprintf(stderr, "Can't malloc space for '%s'\n", path);
+        return NULL;
+    }
+ 
+    r = fread(str, sizeof(char), len, fd);
+ 
+    str[r - 1] = '\0';
+ 
+    fclose(fd);
+ 
+    return str;
 }
 
-GLuint initShader(const char* vertexShaderPath)
+void initShader(const char* vertexShaderPath)
 {
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 
-    char* vertexShaderCode = fileToString(vertexShaderPath);
+    const char *vertexShaderCode = fileToString(vertexShaderPath);
+
+    glShaderSource(vertexShader, 1, &vertexShaderCode, NULL);
+    glCompileShader(vertexShader);
+
+    program = glCreateProgram();
+    glAttachShader(program, vertexShader);
+    glLinkProgram(program);
+
+    glDeleteShader(vertexShader);
 }
 
 int main(int argc, char** argv)
@@ -84,7 +113,7 @@ int main(int argc, char** argv)
     printf("OpenGL version: %s\n", glGetString(GL_VERSION));
     printf("GLSL version: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
     initVertexBuffer();
-    initShader("vs.glsl");
+    initShader("shader/vs.glsl");
 
     glutMainLoop();
     return 0;
