@@ -1,4 +1,6 @@
-CC=gcc
+CC=g++
+FLAGS=-Wall -Wextra -Werror
+LIBS=-I/usr/include/GL -lGL -lGLEW -lglut
 
-glfun: glfun.c
-	$(CC) -o glfun glfun.c -I/usr/include/GL -lGL -lGLEW -lglut
+glfun: glfun.cpp
+	$(CC) $(FLAGS) -o glfun glfun.cpp $(LIBS)
