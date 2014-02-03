@@ -57,22 +57,20 @@ void render(void) {
     glutPostRedisplay();
 }
 
-GLuint initProgram(void) {
-    string vss = utils::fileToString(VERTEX_SHADER_PATH);
+GLuint compileShader(const char* path, GLenum type, string name) {
+    string vss = utils::fileToString(path);
     const char* cvss = vss.c_str();
 
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &cvss, NULL);
-    glCompileShader(vertexShader);
-    utils::logShaderStatus("vert", vertexShader);
+    GLuint shader = glCreateShader(type);
+    glShaderSource(shader, 1, &cvss, NULL);
+    glCompileShader(shader);
+    utils::logShaderStatus(name, shader);
+    return shader;
+}
 
-    string fss = utils::fileToString(FRAGMENT_SHADER_PATH);
-    const char* cfss = fss.c_str();
-
-    GLuint fragShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragShader, 1, &cfss, NULL);
-    glCompileShader(fragShader);
-    utils::logShaderStatus("frag", fragShader);
+GLuint initProgram(void) {
+    GLuint vertexShader = compileShader(VERTEX_SHADER_PATH, GL_VERTEX_SHADER, "vert");
+    GLuint fragShader = compileShader(FRAGMENT_SHADER_PATH, GL_FRAGMENT_SHADER, "frag");
 
     program = glCreateProgram();
     glAttachShader(program, vertexShader);
@@ -99,8 +97,8 @@ int main(int argc, char** argv) {
 
     glutDisplayFunc(render);
 
-    cout << "OpenGL version: " << glGetString(GL_VERSION) << "\n";
-    cout << "GLSL version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
+    cout << "OpenGL version: " << glGetString(GL_VERSION) << endl;
+    cout << "GLSL version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << endl;
 
     init();
 

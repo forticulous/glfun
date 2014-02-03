@@ -30,7 +30,7 @@ namespace utils {
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
         vector<char> statusMessage(logLength);
         glGetShaderInfoLog(shader, logLength, NULL, &statusMessage[0]);
-        cout << "Shader status(" << name << "): " << &statusMessage[0] << "\n";
+        cout << "Shader status(" << name << "): " << &statusMessage[0] << endl;
     }
 
 }
