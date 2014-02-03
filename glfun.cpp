@@ -10,18 +10,33 @@ const char* VERTEX_SHADER_PATH = "shader/vs.glsl";
 
 GLuint vertexBuffer;
 GLuint program;
+GLuint posVAO;
 
 GLuint initVertexBuffer(void) {
+    // VBO
     const float vertices[] = {
-         0.75f,  0.75f, 0.0f,
-         0.75f, -0.75f, 0.0f,
+         0.0f,   0.75f, 0.0f,
         -0.75f, -0.75f, 0.0f,
+         0.75f, -0.75f, 0.0f,
     };
     glGenBuffers(1, &vertexBuffer);
-    
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // VAO
+    glGenVertexArrays(1, &posVAO);
+    glBindVertexArray(posVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glBindVertexArray(0);
+
     return vertexBuffer;
 }
 
@@ -29,34 +44,23 @@ void render(void) {
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(program);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-    glEnableVertexAttribArray(0);
+    glBindVertexArray(posVAO);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
-    glDisableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
     glUseProgram(0);
 
     glutSwapBuffers();
-}
-
-void idle(void) {
     glutPostRedisplay();
 }
 
-int arrLen(char array[]) {
-    return sizeof(array) / sizeof(array[0]);
-}
-
 string fileToString(const char* path) {
-    string source;
     ifstream in(path, ios::in);
     if (!in.is_open()) {
         return "";
     }
-    string line = "";
+    string source, line = "";
     while (getline(in, line))
         source += "\n" + line;
     in.close();
@@ -93,10 +97,10 @@ int main(int argc, char** argv) {
     glutCreateWindow("Hello World");
 
     glutDisplayFunc(render);
-    glutIdleFunc(idle);
 
     cout << "OpenGL version: " << glGetString(GL_VERSION) << "\n";
     cout << "GLSL version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
+    //cout << "glGenVertexArrays enabled: " << 
 
     init();
 
