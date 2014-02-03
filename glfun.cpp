@@ -1,9 +1,8 @@
-#include <fstream>
 #include <iostream>
 #include <string>
-#include <vector>
 #include <GL/glew.h>
 #include <GL/glut.h>
+#include "utils.hpp"
 
 using namespace std;
 
@@ -58,47 +57,22 @@ void render(void) {
     glutPostRedisplay();
 }
 
-string fileToString(const char* path) {
-    ifstream in(path, ios::in);
-    if (!in.is_open()) {
-        return "";
-    }
-    string source, line = "";
-    while (getline(in, line))
-        source += "\n" + line;
-    in.close();
-    return source;
-}
-
-void logShaderStatus(string name, GLuint shader) {
-    int result;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &result);
-    if (result == GL_TRUE) {
-        return;
-    }
-    int logLength;
-    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
-    vector<char> statusMessage(logLength);
-    glGetShaderInfoLog(shader, logLength, NULL, &statusMessage[0]);
-    cout << "Shader status(" << name << "): " << &statusMessage[0] << "\n";
-}
-
 GLuint initProgram(void) {
-    string vss = fileToString(VERTEX_SHADER_PATH);
+    string vss = utils::fileToString(VERTEX_SHADER_PATH);
     const char* cvss = vss.c_str();
 
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &cvss, NULL);
     glCompileShader(vertexShader);
-    logShaderStatus("vert", vertexShader);
+    utils::logShaderStatus("vert", vertexShader);
 
-    string fss = fileToString(FRAGMENT_SHADER_PATH);
+    string fss = utils::fileToString(FRAGMENT_SHADER_PATH);
     const char* cfss = fss.c_str();
 
     GLuint fragShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragShader, 1, &cfss, NULL);
     glCompileShader(fragShader);
-    logShaderStatus("frag", fragShader);
+    utils::logShaderStatus("frag", fragShader);
 
     program = glCreateProgram();
     glAttachShader(program, vertexShader);
