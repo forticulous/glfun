@@ -106,6 +106,7 @@ GLuint initProgram(void) {
     glLinkProgram(program);
 
     glDeleteShader(vertexShader);
+    glDeleteShader(fragShader);
     return program;
 }
 
