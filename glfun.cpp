@@ -31,13 +31,13 @@ GLuint initVertexArray(void) {
          1.0,  1.0,  1.0,
         // back
         -1.0, -1.0, -1.0,
-         1.0,  0.0,  0.0,
-         1.0, -1.0, -1.0,
-         0.0,  1.0,  0.0,
-         1.0,  1.0, -1.0,
          0.0,  0.0,  1.0,
-        -1.0,  1.0, -1.0,
+         1.0, -1.0, -1.0,
          1.0,  1.0,  1.0,
+         1.0,  1.0, -1.0,
+         1.0,  0.0,  0.0,
+        -1.0,  1.0, -1.0,
+         0.0,  1.0,  0.0,
     };
     const GLushort elements[] = {
         // front
@@ -135,12 +135,9 @@ void initUniform(void) {
     glUseProgram(program);
 
     glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, -4.0));
-    glm::mat4 view = glm::lookAt(glm::vec3(0.0, 2.0, 0.0), glm::vec3(0.0, 0.0, -4.0), glm::vec3(0.0, 1.0, 0.0));
+    glm::mat4 view = glm::lookAt(glm::vec3(2.0, 2.0, 0.0), glm::vec3(0.0, 0.0, -4.0), glm::vec3(0.0, 1.0, 0.0));
     glm::mat4 projection = glm::perspective(45.0f, 1.0f * SCREEN_WIDTH / SCREEN_HEIGHT, 0.1f, 10.0f);
     glm::mat4 mvp = projection * view * model;
-    //glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(0.25f));
-    //model = glm::rotate(model, 10.0f, glm::vec3(-1.0f, 0.0f, 0.0f));
-    //glm::mat4 mvp = model;
     glUniformMatrix4fv(uniformMVP, 1, GL_FALSE, glm::value_ptr(mvp));
 
     glUseProgram(0);
