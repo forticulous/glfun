@@ -11,4 +11,7 @@ namespace utils {
     string fileToString(const char* path);
 
     void logShaderStatus(string name, GLuint shader);
+
+    void logProgramStatus(GLuint program);
+
 }

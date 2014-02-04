@@ -21,7 +21,7 @@ namespace utils {
     }
 
     void logShaderStatus(string name, GLuint shader) {
-        int result;
+        GLint result;
         glGetShaderiv(shader, GL_COMPILE_STATUS, &result);
         if (result == GL_TRUE) {
             return;
@@ -31,6 +31,19 @@ namespace utils {
         vector<char> statusMessage(logLength);
         glGetShaderInfoLog(shader, logLength, NULL, &statusMessage[0]);
         cout << "Shader status(" << name << "): " << &statusMessage[0] << endl;
+    }
+
+    void logProgramStatus(GLuint program) {
+        GLint result;        
+        glGetProgramiv(program, GL_LINK_STATUS, &result);
+        if (result == GL_TRUE) {
+            return;
+        }
+        int logLength;
+        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
+        vector<char> statusMessage( max(logLength, int(1)) );
+        glGetProgramInfoLog(program, logLength, NULL, &statusMessage[0]);
+        cout << "Program status: " << &statusMessage[0] << endl;
     }
 
 }
