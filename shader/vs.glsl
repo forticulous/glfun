@@ -3,10 +3,10 @@
 uniform mat4 mvp;
 
 in vec3 position;
-in vec3 vcolor;
-out vec3 fcolor;
+in vec2 vtexcoord;
+out vec2 ftexcoord;
 
 void main() {
     gl_Position = mvp * vec4(position, 1.0);
-    fcolor = vcolor;
+    ftexcoord = vtexcoord;
 }

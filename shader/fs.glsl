@@ -1,7 +1,9 @@
 #version 130
 
-in vec3 fcolor;
+uniform sampler2D boxtexture;
+
+in vec2 ftexcoord;
 
 void main() {
-    gl_FragColor = vec4(fcolor, 1.0);
+    gl_FragColor = texture2D(boxtexture, ftexcoord);
 }
