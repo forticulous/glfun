@@ -14,4 +14,10 @@ namespace utils {
 
     void logProgramStatus(GLuint program);
 
+    void logError(void);
+
+    void logAttribStatus(GLint attrib, string name);
+
+    void logUniformStatus(GLint attrib, string name);
+
 }

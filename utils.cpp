@@ -46,4 +46,26 @@ namespace utils {
         cout << "Program status: " << &statusMessage[0] << endl;
     }
 
+    void logError(void) {
+        GLenum err = glGetError();
+        if (err == GL_NO_ERROR) {
+            return;
+        }
+        cout << "Error: " << err << endl;
+    }
+
+    void logAttribStatus(GLint attrib, string name) {
+        if (attrib != -1) {
+            return;
+        }
+        cout << "Attrib (" << name << ") not bound." << endl;
+    }
+
+    void logUniformStatus(GLint unif, string name) {
+        if (unif != -1) {
+            return;
+        }
+        cout << "Uniform (" << name << ") not bound." << endl;
+    }
+
 }
