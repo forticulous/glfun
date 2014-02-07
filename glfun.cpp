@@ -13,8 +13,8 @@ using namespace std;
 
 const char* VERTEX_SHADER_PATH = "shader/vs.glsl";
 const char* FRAGMENT_SHADER_PATH = "shader/fs.glsl";
-const int SCREEN_HEIGHT = 300;
-const int SCREEN_WIDTH = 400;
+const int SCREEN_WIDTH = 640;
+const int SCREEN_HEIGHT = 480;
 
 GLuint vertexBuffer, texCoordBuffer, elementBuffer;
 GLuint texture;
@@ -31,11 +31,31 @@ void bufferData(void) {
          1.0, -1.0,  1.0,
          1.0,  1.0,  1.0,
         -1.0,  1.0,  1.0,
-        // back
-        -1.0, -1.0, -1.0,
-         1.0, -1.0, -1.0,
+        // top
+        -1.0,  1.0,  1.0,
+         1.0,  1.0,  1.0,
          1.0,  1.0, -1.0,
         -1.0,  1.0, -1.0,
+        // back
+         1.0, -1.0, -1.0,
+        -1.0, -1.0, -1.0,
+        -1.0,  1.0, -1.0,
+         1.0,  1.0, -1.0,
+        // bottom
+        -1.0, -1.0, -1.0,
+         1.0, -1.0, -1.0,
+         1.0, -1.0,  1.0,
+        -1.0, -1.0,  1.0,
+        // left
+        -1.0, -1.0, -1.0,
+        -1.0, -1.0,  1.0,
+        -1.0,  1.0,  1.0,
+        -1.0,  1.0, -1.0,
+        // right
+         1.0, -1.0,  1.0,
+         1.0, -1.0, -1.0,
+         1.0,  1.0, -1.0,
+         1.0,  1.0,  1.0,
     };
     glGenBuffers(1, &vertexBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
@@ -44,35 +64,35 @@ void bufferData(void) {
     // Tex Coords
     GLfloat texcoords[] = {
         // front
-        0.0, 1.0,
-        1.0, 1.0,
-        1.0, 0.0,
         0.0, 0.0,
+        1.0, 0.0,
+        1.0, 1.0,
+        0.0, 1.0,
         // top
-        0.0, 1.0,
-        1.0, 1.0,
-        1.0, 0.0,
         0.0, 0.0,
+        1.0, 0.0,
+        1.0, 1.0,
+        0.0, 1.0,
         // back
-        0.0, 1.0,
-        1.0, 1.0,
-        1.0, 0.0,
         0.0, 0.0,
+        1.0, 0.0,
+        1.0, 1.0,
+        0.0, 1.0,
         // bottom
-        0.0, 1.0,
-        1.0, 1.0,
-        1.0, 0.0,
         0.0, 0.0,
+        1.0, 0.0,
+        1.0, 1.0,
+        0.0, 1.0,
         // left
-        0.0, 1.0,
-        1.0, 1.0,
-        1.0, 0.0,
         0.0, 0.0,
+        1.0, 0.0,
+        1.0, 1.0,
+        0.0, 1.0,
         // right
-        0.0, 1.0,
-        1.0, 1.0,
-        1.0, 0.0,
         0.0, 0.0,
+        1.0, 0.0,
+        1.0, 1.0,
+        0.0, 1.0,
     };
     glGenBuffers(1, &texCoordBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
@@ -84,20 +104,20 @@ void bufferData(void) {
         0, 1, 2,
         2, 3, 0,
         // top
-        3, 2, 6,
-        6, 7, 3,
+        4, 5, 6,
+        6, 7, 4,
         // back
-        7, 6, 5,
-        5, 4, 7,
+        8, 9, 10,
+        10, 11, 8,
         // bottom
-        4, 5, 1,
-        1, 0, 4,
+        12, 13, 14,
+        14, 15, 12,
         // left
-        4, 0, 3,
-        3, 7, 4,
+        16, 17, 18,
+        18, 19, 16,
         // right
-        1, 5, 6,
-        6, 2, 1,
+        20, 21, 22,
+        22, 23, 20,
     };
     glGenBuffers(1, &elementBuffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
@@ -111,19 +131,39 @@ void bufferData(void) {
 
     // Clean up
     glBindTexture(GL_TEXTURE_2D, 0);
-    glDeleteTextures(1, &texture);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void initAttrib(void) {
-    // Uniforms
-    uniformMVP = glGetUniformLocation(program, "mvp");
-    uniformBoxTexture = glGetUniformLocation(program, "boxtexture");
+GLuint compileShader(const char* path, GLenum type, string name);
 
+GLuint initProgram(void) {
+    GLuint vertexShader = compileShader(VERTEX_SHADER_PATH, GL_VERTEX_SHADER, "vs.glsl");
+    GLuint fragShader = compileShader(FRAGMENT_SHADER_PATH, GL_FRAGMENT_SHADER, "fs.glsl");
+
+    program = glCreateProgram();
+    glAttachShader(program, vertexShader);
+    glAttachShader(program, fragShader);
+    glLinkProgram(program);
+    utils::logProgramStatus(program);
+
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragShader);
+    return program;
+}
+
+void initAttrib(void) {
     // Attribs  
     attrPosition  = glGetAttribLocation(program, "position");
+    utils::logAttribStatus(attrPosition, "position");
     attrVTexCoord  = glGetAttribLocation(program, "vtexcoord");
+    utils::logAttribStatus(attrVTexCoord, "vtexcoord");
+
+    // Uniforms
+    uniformMVP = glGetUniformLocation(program, "mvp");
+    utils::logUniformStatus(uniformMVP, "mvp");
+    uniformBoxTexture = glGetUniformLocation(program, "boxtexture");
+    utils::logUniformStatus(uniformBoxTexture, "boxtexture");
 }
 
 void initUniform(void) {
@@ -151,12 +191,12 @@ GLuint initVertexArray(void) {
     // Vertices
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
     glEnableVertexAttribArray(attrPosition);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0); 
+    glVertexAttribPointer(attrPosition, 3, GL_FLOAT, GL_FALSE, 0, 0); 
 
     // Tex Coords
     glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
     glEnableVertexAttribArray(attrVTexCoord);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(attrVTexCoord, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
     // Elements
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
@@ -169,14 +209,30 @@ GLuint initVertexArray(void) {
     return vaoHandle;
 }
 
+void init(void) {
+    glewInit();
+    bufferData();
+    initProgram();
+    initAttrib();
+    initUniform();
+    initVertexArray();
+
+    glEnable(GL_DEPTH_TEST);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+}
+
 void render(void) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(program);
     glBindVertexArray(vaoHandle);
+    glBindTexture(GL_TEXTURE_2D, texture);
 
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, 0);
+    int size; 
+    glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+    glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
 
+    glBindTexture(GL_TEXTURE_2D, 0);
     glBindVertexArray(0);
     glUseProgram(0);
 
@@ -193,33 +249,6 @@ GLuint compileShader(const char* path, GLenum type, string name) {
     glCompileShader(shader);
     utils::logShaderStatus(name, shader);
     return shader;
-}
-
-GLuint initProgram(void) {
-    GLuint vertexShader = compileShader(VERTEX_SHADER_PATH, GL_VERTEX_SHADER, "vs.glsl");
-    GLuint fragShader = compileShader(FRAGMENT_SHADER_PATH, GL_FRAGMENT_SHADER, "fs.glsl");
-
-    program = glCreateProgram();
-    glAttachShader(program, vertexShader);
-    glAttachShader(program, fragShader);
-    glLinkProgram(program);
-    utils::logProgramStatus(program);
-
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragShader);
-    return program;
-}
-
-void init(void) {
-    glewInit();
-    bufferData();
-    initProgram();
-    initUniform();
-    initAttrib();
-    initVertexArray();
-
-    glEnable(GL_DEPTH_TEST);
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
 int main(int argc, char** argv) {
