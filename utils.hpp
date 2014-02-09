@@ -2,7 +2,10 @@
 #define UTILS_H
 #endif
 #include <string>
+#include <vector>
 #include <GL/gl.h>
+#include <glm/glm.hpp>
+#include "mesh.cpp"
 
 namespace utils {
 
@@ -19,5 +22,7 @@ namespace utils {
     void logAttribStatus(GLint attrib, string name);
 
     void logUniformStatus(GLint attrib, string name);
+
+    void loadObj(const char* filename, Mesh& mesh); 
 
 }

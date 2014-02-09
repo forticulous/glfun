@@ -7,130 +7,40 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "utils.hpp"
 
-#include "texture/box.c"
-
 using namespace std;
 
 const char* VERTEX_SHADER_PATH = "shader/vs.glsl";
 const char* FRAGMENT_SHADER_PATH = "shader/fs.glsl";
+const char* SUZANNE_OBJ_PATH = "mesh/suzanne.obj";
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 
-GLuint vertexBuffer, texCoordBuffer, elementBuffer;
-GLuint texture;
+glm::mat4 mvp = glm::mat4(1.0f);
+GLuint vertexBuffer, normalBuffer, elementBuffer;
 GLuint program;
 GLuint vaoHandle;
-GLint uniformMVP, uniformBoxTexture;
-GLint attrPosition, attrVTexCoord;
+GLint uniformMVP, uniformView, uniformColor, uniformLightPosition;
+GLint attrPosition, attrNormal;
+Mesh suzanne;
 
 void bufferData(void) {
-    // Cube vertices
-    const GLfloat vertices[] = {
-        // front
-        -1.0, -1.0,  1.0,
-         1.0, -1.0,  1.0,
-         1.0,  1.0,  1.0,
-        -1.0,  1.0,  1.0,
-        // top
-        -1.0,  1.0,  1.0,
-         1.0,  1.0,  1.0,
-         1.0,  1.0, -1.0,
-        -1.0,  1.0, -1.0,
-        // back
-         1.0, -1.0, -1.0,
-        -1.0, -1.0, -1.0,
-        -1.0,  1.0, -1.0,
-         1.0,  1.0, -1.0,
-        // bottom
-        -1.0, -1.0, -1.0,
-         1.0, -1.0, -1.0,
-         1.0, -1.0,  1.0,
-        -1.0, -1.0,  1.0,
-        // left
-        -1.0, -1.0, -1.0,
-        -1.0, -1.0,  1.0,
-        -1.0,  1.0,  1.0,
-        -1.0,  1.0, -1.0,
-        // right
-         1.0, -1.0,  1.0,
-         1.0, -1.0, -1.0,
-         1.0,  1.0, -1.0,
-         1.0,  1.0,  1.0,
-    };
+    utils::loadObj(SUZANNE_OBJ_PATH, suzanne);
+    // vertices
     glGenBuffers(1, &vertexBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, suzanne.vertices.size() * sizeof(suzanne.vertices[0]), suzanne.vertices.data(), GL_STATIC_DRAW);
 
-    // Tex Coords
-    GLfloat texcoords[] = {
-        // front
-        0.0, 0.0,
-        1.0, 0.0,
-        1.0, 1.0,
-        0.0, 1.0,
-        // top
-        0.0, 0.0,
-        1.0, 0.0,
-        1.0, 1.0,
-        0.0, 1.0,
-        // back
-        0.0, 0.0,
-        1.0, 0.0,
-        1.0, 1.0,
-        0.0, 1.0,
-        // bottom
-        0.0, 0.0,
-        1.0, 0.0,
-        1.0, 1.0,
-        0.0, 1.0,
-        // left
-        0.0, 0.0,
-        1.0, 0.0,
-        1.0, 1.0,
-        0.0, 1.0,
-        // right
-        0.0, 0.0,
-        1.0, 0.0,
-        1.0, 1.0,
-        0.0, 1.0,
-    };
-    glGenBuffers(1, &texCoordBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(texcoords), texcoords, GL_STATIC_DRAW);
+    // normals
+    glGenBuffers(1, &normalBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
+    glBufferData(GL_ARRAY_BUFFER, suzanne.normals.size() * sizeof(suzanne.normals[0]), suzanne.normals.data(), GL_STATIC_DRAW);
 
-    // Cube elements
-    const GLushort elements[] = {
-        // front
-        0, 1, 2,
-        2, 3, 0,
-        // top
-        4, 5, 6,
-        6, 7, 4,
-        // back
-        8, 9, 10,
-        10, 11, 8,
-        // bottom
-        12, 13, 14,
-        14, 15, 12,
-        // left
-        16, 17, 18,
-        18, 19, 16,
-        // right
-        20, 21, 22,
-        22, 23, 20,
-    };
+    // elements
     glGenBuffers(1, &elementBuffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW);
-
-    // Texture data
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, box.width, box.height, 0, GL_RGB, GL_UNSIGNED_BYTE, box.pixel_data);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, suzanne.elements.size() * sizeof(suzanne.elements[0]), suzanne.elements.data(), GL_STATIC_DRAW);
 
     // Clean up
-    glBindTexture(GL_TEXTURE_2D, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
@@ -147,40 +57,37 @@ GLuint initProgram(void) {
     glLinkProgram(program);
     utils::logProgramStatus(program);
 
+    // Attribs  
+    attrPosition  = glGetAttribLocation(program, "position");
+    utils::logAttribStatus(attrPosition, "position");
+    attrNormal  = glGetAttribLocation(program, "vnormal");
+    utils::logAttribStatus(attrNormal, "vnormal");
+
+    // Uniforms
+    uniformMVP = glGetUniformLocation(program, "mvp");
+    utils::logUniformStatus(uniformMVP, "mvp");
+    uniformView = glGetUniformLocation(program, "view");
+    utils::logUniformStatus(uniformView, "view");
+    uniformColor = glGetUniformLocation(program, "color");
+    utils::logUniformStatus(uniformColor, "color");
+    uniformLightPosition = glGetUniformLocation(program, "lightposition");
+    utils::logUniformStatus(uniformLightPosition, "lightposition");
+
     glDeleteShader(vertexShader);
     glDeleteShader(fragShader);
     return program;
 }
 
-void initAttrib(void) {
-    // Attribs  
-    attrPosition  = glGetAttribLocation(program, "position");
-    utils::logAttribStatus(attrPosition, "position");
-    attrVTexCoord  = glGetAttribLocation(program, "vtexcoord");
-    utils::logAttribStatus(attrVTexCoord, "vtexcoord");
-
-    // Uniforms
-    uniformMVP = glGetUniformLocation(program, "mvp");
-    utils::logUniformStatus(uniformMVP, "mvp");
-    uniformBoxTexture = glGetUniformLocation(program, "boxtexture");
-    utils::logUniformStatus(uniformBoxTexture, "boxtexture");
-}
-
 void initUniform(void) {
     glUseProgram(program);
 
-    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, -4.0));
-    glm::mat4 view = glm::lookAt(glm::vec3(2.0, 2.0, 0.0), glm::vec3(0.0, 0.0, -4.0), glm::vec3(0.0, 1.0, 0.0));
-    glm::mat4 projection = glm::perspective(45.0f, 1.0f * SCREEN_WIDTH / SCREEN_HEIGHT, 0.1f, 10.0f);
-    glm::mat4 mvp = projection * view * model;
-    glUniformMatrix4fv(uniformMVP, 1, GL_FALSE, glm::value_ptr(mvp));
+    glm::vec3 color = glm::vec3(1.0, 1.0, 1.0);
+    glUniform3fv(uniformColor, 1, glm::value_ptr(color));
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glUniform1i(uniformBoxTexture, 0);
+    glm::vec3 lightPosition = glm::vec3(0.0, 0.0, 2.0);
+    glUniform3fv(uniformLightPosition, 1, glm::value_ptr(lightPosition));
 
     glUseProgram(0);
-    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 GLuint initVertexArray(void) {
@@ -191,12 +98,12 @@ GLuint initVertexArray(void) {
     // Vertices
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
     glEnableVertexAttribArray(attrPosition);
-    glVertexAttribPointer(attrPosition, 3, GL_FLOAT, GL_FALSE, 0, 0); 
+    glVertexAttribPointer(attrPosition, 4, GL_FLOAT, GL_FALSE, 0, 0); 
 
-    // Tex Coords
-    glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
-    glEnableVertexAttribArray(attrVTexCoord);
-    glVertexAttribPointer(attrVTexCoord, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    // Normals
+    glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
+    glEnableVertexAttribArray(attrNormal);
+    glVertexAttribPointer(attrNormal, 3, GL_FLOAT, GL_FALSE, 0, 0); 
 
     // Elements
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
@@ -213,7 +120,6 @@ void init(void) {
     glewInit();
     bufferData();
     initProgram();
-    initAttrib();
     initUniform();
     initVertexArray();
 
@@ -226,18 +132,33 @@ void render(void) {
 
     glUseProgram(program);
     glBindVertexArray(vaoHandle);
-    glBindTexture(GL_TEXTURE_2D, texture);
 
-    int size; 
-    glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-    glDrawElements(GL_TRIANGLES, size / sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
+    glDrawElements(GL_TRIANGLES, suzanne.elements.size(), GL_UNSIGNED_SHORT, 0);
 
-    glBindTexture(GL_TEXTURE_2D, 0);
     glBindVertexArray(0);
     glUseProgram(0);
 
     glutSwapBuffers();
     glutPostRedisplay();
+}
+
+void idle(void) {
+    glUseProgram(program);
+
+    float angle = glutGet(GLUT_ELAPSED_TIME) / 1000.0 * 15;  // base 15° per second
+    glm::mat4 rotate = \
+        glm::rotate(glm::mat4(1.0f), angle*3.0f, glm::vec3(1, 0, 0)) *  // X axis
+        glm::rotate(glm::mat4(1.0f), angle*2.0f, glm::vec3(0, 1, 0)) *  // Y axis
+        glm::rotate(glm::mat4(1.0f), angle*4.0f, glm::vec3(0, 0, 1));   // Z axis
+
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, -4.0));
+    glm::mat4 view = glm::lookAt(glm::vec3(2.0, 2.0, 0.0), glm::vec3(0.0, 0.0, -4.0), glm::vec3(0.0, 1.0, 0.0));
+    glm::mat4 projection = glm::perspective(45.0f, 1.0f * SCREEN_WIDTH / SCREEN_HEIGHT, 0.1f, 10.0f);
+    mvp = projection * view * model * rotate;
+    glUniformMatrix4fv(uniformMVP, 1, GL_FALSE, glm::value_ptr(mvp));
+    glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(view));
+
+    glUseProgram(0);
 }
 
 GLuint compileShader(const char* path, GLenum type, string name) {
@@ -258,6 +179,7 @@ int main(int argc, char** argv) {
     glutCreateWindow("Hello World");
 
     glutDisplayFunc(render);
+    glutIdleFunc(idle);
 
     cout << "OpenGL version: " << glGetString(GL_VERSION) << endl;
     cout << "GLSL version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << endl;

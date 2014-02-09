@@ -1,6 +1,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <sstream>
 #include <GL/glew.h>
 #include "utils.hpp"
 
@@ -66,6 +67,54 @@ namespace utils {
             return;
         }
         cout << "Uniform (" << name << ") not bound." << endl;
+    }
+
+    void loadObj(const char* filename, Mesh& mesh) {
+        ifstream in(filename, ios::in);
+        if (!in) {
+            cerr << "Cannot open " << filename << endl; 
+            exit(1); 
+        }
+       
+        string line;
+        while (getline(in, line)) {
+            if (line.substr(0,2) == "v ") {
+                istringstream s(line.substr(2));
+                glm::vec4 v; 
+                s >> v.x; 
+                s >> v.y; 
+                s >> v.z; 
+                v.w = 1.0f;
+                mesh.vertices.push_back(v);
+            } else if (line.substr(0,2) == "f ") {
+                istringstream s(line.substr(2));
+                GLushort a,b,c;
+                s >> a; 
+                s >> b; 
+                s >> c;
+                a--; 
+                b--; 
+                c--;
+                mesh.elements.push_back(a); 
+                mesh.elements.push_back(b); 
+                mesh.elements.push_back(c);
+            } else if (line[0] == '#') {
+                /* ignoring this line */ 
+            } else { 
+                /* ignoring this line */ 
+            }
+        }
+       
+        mesh.normals.resize(mesh.vertices.size(), glm::vec3(0.0, 0.0, 0.0));
+        for (vector<GLushort>::size_type i = 0; i < mesh.elements.size(); i+=3) {
+            GLushort ia = mesh.elements[i];
+            GLushort ib = mesh.elements[i+1];
+            GLushort ic = mesh.elements[i+2];
+            glm::vec3 normal = glm::normalize(glm::cross(
+                glm::vec3(mesh.vertices[ib]) - glm::vec3(mesh.vertices[ia]),
+                glm::vec3(mesh.vertices[ic]) - glm::vec3(mesh.vertices[ia])));
+            mesh.normals[ia] = mesh.normals[ib] = mesh.normals[ic] = normal;
+        }
     }
 
 }

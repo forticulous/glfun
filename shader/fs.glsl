@@ -1,10 +1,11 @@
 #version 130
 
-uniform sampler2D boxtexture;
+uniform vec3 color;
 
-in vec2 ftexcoord;
+in vec3 lightvector;
+in vec3 fnormal;
 
 void main() {
-    vec2 fliptexcoord = vec2(ftexcoord.x, 1.0 - ftexcoord.y);
-    gl_FragColor = texture2D(boxtexture, fliptexcoord);
+    float dotproduct = max(dot(normalize(lightvector), normalize(fnormal)), 0.0);
+    gl_FragColor = dotproduct * vec4(color, 1.0);
 }
