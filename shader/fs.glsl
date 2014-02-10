@@ -6,6 +6,6 @@ in vec3 lightvector;
 in vec3 fnormal;
 
 void main() {
-    float dotproduct = max(dot(normalize(lightvector), normalize(fnormal)), 0.0);
+    float dotproduct = max(dot(lightvector, fnormal), 0.0);
     gl_FragColor = dotproduct * vec4(color, 1.0);
 }

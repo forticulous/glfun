@@ -1,7 +1,7 @@
 #version 130
 
 uniform mat4 mvp;
-uniform mat4 view;
+uniform mat3 m3x3InvTrans;
 uniform vec3 lightposition;
 
 in vec3 position;
@@ -11,6 +11,6 @@ out vec3 fnormal;
 
 void main() {
     gl_Position = mvp * vec4(position, 1.0);
-    lightvector = (view * vec4(lightposition, 1.0)).xyz - (view * vec4(position, 1.0)).xyz;
-    fnormal = vnormal;
+    lightvector = normalize(lightposition);
+    fnormal = normalize(m3x3InvTrans * vnormal);
 }

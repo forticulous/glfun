@@ -15,11 +15,10 @@ const char* SUZANNE_OBJ_PATH = "mesh/suzanne.obj";
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 
-glm::mat4 mvp = glm::mat4(1.0f);
 GLuint vertexBuffer, normalBuffer, elementBuffer;
 GLuint program;
 GLuint vaoHandle;
-GLint uniformMVP, uniformView, uniformColor, uniformLightPosition;
+GLint uniformMVP, uniformColor, uniformLightPosition, uniformMInvTrans;
 GLint attrPosition, attrNormal;
 Mesh suzanne;
 
@@ -66,12 +65,12 @@ GLuint initProgram(void) {
     // Uniforms
     uniformMVP = glGetUniformLocation(program, "mvp");
     utils::logUniformStatus(uniformMVP, "mvp");
-    uniformView = glGetUniformLocation(program, "view");
-    utils::logUniformStatus(uniformView, "view");
     uniformColor = glGetUniformLocation(program, "color");
     utils::logUniformStatus(uniformColor, "color");
     uniformLightPosition = glGetUniformLocation(program, "lightposition");
     utils::logUniformStatus(uniformLightPosition, "lightposition");
+    uniformMInvTrans = glGetUniformLocation(program, "m3x3InvTrans");
+    utils::logUniformStatus(uniformMInvTrans, "m3x3InvTrans");
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragShader);
@@ -84,7 +83,7 @@ void initUniform(void) {
     glm::vec3 color = glm::vec3(1.0, 1.0, 1.0);
     glUniform3fv(uniformColor, 1, glm::value_ptr(color));
 
-    glm::vec3 lightPosition = glm::vec3(0.0, 0.0, 2.0);
+    glm::vec3 lightPosition = glm::vec3(0.0, 0.0, 4.0);
     glUniform3fv(uniformLightPosition, 1, glm::value_ptr(lightPosition));
 
     glUseProgram(0);
@@ -146,17 +145,19 @@ void idle(void) {
     glUseProgram(program);
 
     float angle = glutGet(GLUT_ELAPSED_TIME) / 1000.0 * 15;  // base 15° per second
-    glm::mat4 rotate = \
-        glm::rotate(glm::mat4(1.0f), angle*3.0f, glm::vec3(1, 0, 0)) *  // X axis
-        glm::rotate(glm::mat4(1.0f), angle*2.0f, glm::vec3(0, 1, 0)) *  // Y axis
-        glm::rotate(glm::mat4(1.0f), angle*4.0f, glm::vec3(0, 0, 1));   // Z axis
 
-    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, -4.0));
-    glm::mat4 view = glm::lookAt(glm::vec3(2.0, 2.0, 0.0), glm::vec3(0.0, 0.0, -4.0), glm::vec3(0.0, 1.0, 0.0));
+    glm::mat4 rot = glm::rotate(glm::mat4(1.0f), angle * 3.0f, glm::vec3(1, 0, 0));
+    rot = glm::rotate(rot, angle * 2.0f, glm::vec3(0, 1, 0));
+    rot = glm::rotate(rot, angle * 4.0f, glm::vec3(0, 0, 1));
+    glm::mat4 trans = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, -4.0));
+    glm::mat4 model = trans * rot;
+    glm::mat4 view = glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, -4.0), glm::vec3(0.0, 1.0, 0.0));
     glm::mat4 projection = glm::perspective(45.0f, 1.0f * SCREEN_WIDTH / SCREEN_HEIGHT, 0.1f, 10.0f);
-    mvp = projection * view * model * rotate;
+    glm::mat4 mvp = projection * view * model;
     glUniformMatrix4fv(uniformMVP, 1, GL_FALSE, glm::value_ptr(mvp));
-    glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(view));
+
+    glm::mat3 mInvTrans = glm::transpose(glm::inverse(glm::mat3(suzanne.object2world)));
+    glUniformMatrix3fv(uniformMInvTrans, 1, GL_FALSE, glm::value_ptr(mInvTrans));
 
     glUseProgram(0);
 }
