@@ -18,7 +18,7 @@ const int SCREEN_HEIGHT = 480;
 GLuint vertexBuffer, normalBuffer, elementBuffer;
 GLuint program;
 GLuint vaoHandle;
-GLint uniformMVP, uniformColor, uniformLightPosition, uniformMInvTrans;
+GLint uniformMVP, uniformModel, uniformColor, uniformLightPosition, uniformMInvTrans;
 GLint attrPosition, attrNormal;
 Mesh suzanne;
 
@@ -71,6 +71,8 @@ GLuint initProgram(void) {
     utils::logUniformStatus(uniformLightPosition, "lightposition");
     uniformMInvTrans = glGetUniformLocation(program, "m3x3InvTrans");
     utils::logUniformStatus(uniformMInvTrans, "m3x3InvTrans");
+    uniformModel = glGetUniformLocation(program, "model");
+    utils::logUniformStatus(uniformModel, "model");
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragShader);
@@ -83,7 +85,7 @@ void initUniform(void) {
     glm::vec3 color = glm::vec3(1.0, 1.0, 1.0);
     glUniform3fv(uniformColor, 1, glm::value_ptr(color));
 
-    glm::vec3 lightPosition = glm::vec3(0.0, 0.0, 4.0);
+    glm::vec3 lightPosition = glm::vec3(-8.0, 0.0, 0.0);
     glUniform3fv(uniformLightPosition, 1, glm::value_ptr(lightPosition));
 
     glUseProgram(0);
@@ -151,13 +153,17 @@ void idle(void) {
     rot = glm::rotate(rot, angle * 4.0f, glm::vec3(0, 0, 1));
     glm::mat4 trans = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, -4.0));
     glm::mat4 model = trans * rot;
+    glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
+
+    glm::mat3 mInvTrans = glm::transpose(glm::inverse(glm::mat3(model)));
+    glUniformMatrix3fv(uniformMInvTrans, 1, GL_FALSE, glm::value_ptr(mInvTrans));
+
     glm::mat4 view = glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, -4.0), glm::vec3(0.0, 1.0, 0.0));
+    
     glm::mat4 projection = glm::perspective(45.0f, 1.0f * SCREEN_WIDTH / SCREEN_HEIGHT, 0.1f, 10.0f);
+    
     glm::mat4 mvp = projection * view * model;
     glUniformMatrix4fv(uniformMVP, 1, GL_FALSE, glm::value_ptr(mvp));
-
-    glm::mat3 mInvTrans = glm::transpose(glm::inverse(glm::mat3(suzanne.object2world)));
-    glUniformMatrix3fv(uniformMInvTrans, 1, GL_FALSE, glm::value_ptr(mInvTrans));
 
     glUseProgram(0);
 }
