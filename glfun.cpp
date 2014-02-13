@@ -5,6 +5,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include "utils.hpp"
 
 using namespace std;
@@ -18,7 +20,7 @@ const int SCREEN_HEIGHT = 480;
 GLuint vertexBuffer, normalBuffer, elementBuffer;
 GLuint program;
 GLuint vaoHandle;
-GLint uniformMVP, uniformModel, uniformColor, uniformLightPosition, uniformMInvTrans;
+GLint uniformMVP, uniformModel, uniformMInvTrans, uniformViewInv;
 GLint attrPosition, attrNormal;
 Mesh suzanne;
 
@@ -59,36 +61,22 @@ GLuint initProgram(void) {
     // Attribs  
     attrPosition  = glGetAttribLocation(program, "position");
     utils::logAttribStatus(attrPosition, "position");
-    attrNormal  = glGetAttribLocation(program, "vnormal");
-    utils::logAttribStatus(attrNormal, "vnormal");
+    attrNormal  = glGetAttribLocation(program, "normal");
+    utils::logAttribStatus(attrNormal, "normal");
 
     // Uniforms
     uniformMVP = glGetUniformLocation(program, "mvp");
     utils::logUniformStatus(uniformMVP, "mvp");
-    uniformColor = glGetUniformLocation(program, "color");
-    utils::logUniformStatus(uniformColor, "color");
-    uniformLightPosition = glGetUniformLocation(program, "lightposition");
-    utils::logUniformStatus(uniformLightPosition, "lightposition");
-    uniformMInvTrans = glGetUniformLocation(program, "m3x3InvTrans");
-    utils::logUniformStatus(uniformMInvTrans, "m3x3InvTrans");
+    uniformMInvTrans = glGetUniformLocation(program, "mInvTrans");
+    utils::logUniformStatus(uniformMInvTrans, "mInvTrans");
     uniformModel = glGetUniformLocation(program, "model");
     utils::logUniformStatus(uniformModel, "model");
+    uniformViewInv = glGetUniformLocation(program, "viewInv");
+    utils::logUniformStatus(uniformViewInv, "viewInv");
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragShader);
     return program;
-}
-
-void initUniform(void) {
-    glUseProgram(program);
-
-    glm::vec3 color = glm::vec3(1.0, 1.0, 1.0);
-    glUniform3fv(uniformColor, 1, glm::value_ptr(color));
-
-    glm::vec3 lightPosition = glm::vec3(-8.0, 0.0, 0.0);
-    glUniform3fv(uniformLightPosition, 1, glm::value_ptr(lightPosition));
-
-    glUseProgram(0);
 }
 
 GLuint initVertexArray(void) {
@@ -121,7 +109,6 @@ void init(void) {
     glewInit();
     bufferData();
     initProgram();
-    initUniform();
     initVertexArray();
 
     glEnable(GL_DEPTH_TEST);
@@ -148,17 +135,19 @@ void idle(void) {
 
     float angle = glutGet(GLUT_ELAPSED_TIME) / 1000.0 * 15;  // base 15° per second
 
-    glm::mat4 rot = glm::rotate(glm::mat4(1.0f), angle * 3.0f, glm::vec3(1, 0, 0));
+    glm::quat rot = glm::angleAxis(angle * 3.0f, glm::vec3(1, 0, 0));
     rot = glm::rotate(rot, angle * 2.0f, glm::vec3(0, 1, 0));
     rot = glm::rotate(rot, angle * 4.0f, glm::vec3(0, 0, 1));
     glm::mat4 trans = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, -4.0));
-    glm::mat4 model = trans * rot;
+    glm::mat4 model = trans * glm::toMat4(rot);
     glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
 
-    glm::mat3 mInvTrans = glm::transpose(glm::inverse(glm::mat3(model)));
-    glUniformMatrix3fv(uniformMInvTrans, 1, GL_FALSE, glm::value_ptr(mInvTrans));
+    glm::mat4 mInvTrans = glm::transpose(glm::inverse(model));
+    glUniformMatrix4fv(uniformMInvTrans, 1, GL_FALSE, glm::value_ptr(mInvTrans));
 
     glm::mat4 view = glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, -4.0), glm::vec3(0.0, 1.0, 0.0));
+    glm::mat4 viewInv = glm::inverse(view);
+    glUniformMatrix4fv(uniformViewInv, 1, GL_FALSE, glm::value_ptr(viewInv));
     
     glm::mat4 projection = glm::perspective(45.0f, 1.0f * SCREEN_WIDTH / SCREEN_HEIGHT, 0.1f, 10.0f);
     

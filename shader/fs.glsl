@@ -1,11 +1,7 @@
 #version 130
 
-uniform vec3 color;
-
-in vec3 lightvector;
-in vec3 fnormal;
+in vec3 color;
 
 void main() {
-    float dotproduct = max(dot(lightvector, fnormal), 0.0);
-    gl_FragColor = dotproduct * vec4(color, 1.0);
+    gl_FragColor = vec4(color, 1.0);
 }
