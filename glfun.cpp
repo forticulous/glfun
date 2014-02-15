@@ -5,6 +5,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include "utils.hpp"
 
 using namespace std;
@@ -133,11 +135,11 @@ void idle(void) {
 
     float angle = glutGet(GLUT_ELAPSED_TIME) / 1000.0 * 15;  // base 15° per second
 
-    glm::mat4 rot = glm::rotate(glm::mat4(1.0f), angle * 3.0f, glm::vec3(1, 0, 0));
+    glm::quat rot = glm::angleAxis(angle * 3.0f, glm::vec3(1, 0, 0));
     rot = glm::rotate(rot, angle * 2.0f, glm::vec3(0, 1, 0));
     rot = glm::rotate(rot, angle * 4.0f, glm::vec3(0, 0, 1));
     glm::mat4 trans = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 0.0, -4.0));
-    glm::mat4 model = trans * rot;
+    glm::mat4 model = trans * glm::toMat4(rot);
     glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
 
     glm::mat4 mInvTrans = glm::transpose(glm::inverse(model));
