@@ -23,9 +23,9 @@ struct materialSource {
     float shininess;
 };
 materialSource material = materialSource(
-    vec3(0.0, 0.0, 0.15),
-    vec3(0.0, 1.0, 0.0),
-    vec3(1.0, 0.0, 0.0),
+    vec3(0.15, 0.15, 0.0),
+    vec3(1.0, 1.0, 0.0),
+    vec3(1.0, 1.0, 1.0),
     2.5
 );
 

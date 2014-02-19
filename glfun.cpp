@@ -14,8 +14,8 @@ using namespace std;
 const char* VERTEX_SHADER_PATH = "shader/vs.glsl";
 const char* FRAGMENT_SHADER_PATH = "shader/fs.glsl";
 const char* SUZANNE_OBJ_PATH = "mesh/suzanne.obj";
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 480;
+const int SCREEN_WIDTH = 1028;
+const int SCREEN_HEIGHT = 768;
 
 GLuint vertexBuffer, normalBuffer, elementBuffer;
 GLuint program;
@@ -26,6 +26,7 @@ Mesh suzanne;
 
 void bufferData(void) {
     utils::loadObj(SUZANNE_OBJ_PATH, suzanne);
+
     // vertices
     glGenBuffers(1, &vertexBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
@@ -87,7 +88,7 @@ GLuint initVertexArray(void) {
     // Vertices
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
     glEnableVertexAttribArray(attrPosition);
-    glVertexAttribPointer(attrPosition, 4, GL_FLOAT, GL_FALSE, 0, 0); 
+    glVertexAttribPointer(attrPosition, 3, GL_FLOAT, GL_FALSE, 0, 0); 
 
     // Normals
     glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);

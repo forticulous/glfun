@@ -75,63 +75,75 @@ namespace utils {
             cerr << "Cannot open " << filename << endl; 
             exit(1); 
         }
-       
+
+        std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
+        std::vector<glm::vec3> temp_vertices;
+        std::vector<glm::vec2> temp_uvs;
+        std::vector<glm::vec3> temp_normals;       
+
         string line;
         while (getline(in, line)) {
-            if (line.substr(0,2) == "v ") {
-                istringstream s(line.substr(2));
-                glm::vec4 v; 
-                s >> v.x; 
-                s >> v.y; 
-                s >> v.z; 
-                v.w = 1.0f;
-                mesh.vertices.push_back(v);
-            } else if (line.substr(0,2) == "f ") {
-                istringstream s(line.substr(2));
-                GLushort a,b,c;
-                s >> a; 
-                s >> b; 
-                s >> c;
-                a--; 
-                b--; 
-                c--;
-                mesh.elements.push_back(a); 
-                mesh.elements.push_back(b); 
-                mesh.elements.push_back(c);
-            } else if (line[0] == '#') {
-                /* ignoring this line */ 
+            if (line[0] == '#') {
+                // comment
+                continue;
+            } else if (line.substr(0,2) == "v ") {
+                // vertex
+                glm::vec3 vertex;
+                sscanf(line.c_str(), "v %f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+                temp_vertices.push_back(vertex);
+            } else if (line.substr(0, 3) == "vt ") {
+                // texture
+                glm::vec2 uv;
+                sscanf(line.c_str(), "vt %f %f\n", &uv.x, &uv.y);
+                uv.y = -uv.y; // Textures are inverted
+                temp_uvs.push_back(uv);
+            } else if (line.substr(0, 3) == "vn ") {
+                // normals
+                glm::vec3 normal;
+                sscanf(line.c_str(), "vn %f %f %f\n", &normal.x, &normal.y, &normal.z);
+                temp_normals.push_back(normal);
+            } else if (line.substr(0, 2) == "f ") {
+                // fragment
+                unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
+                int matches = sscanf(line.c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], 
+                    &vertexIndex[1], &uvIndex[1], &normalIndex[1], 
+                    &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
+
+                if (matches != 9) {
+                    cout << "parser can't read fragment line" << endl;
+                    return;
+                }
+
+                vertexIndices.push_back(vertexIndex[0]);
+                vertexIndices.push_back(vertexIndex[1]);
+                vertexIndices.push_back(vertexIndex[2]);
+                uvIndices.push_back(uvIndex[0]);
+                uvIndices.push_back(uvIndex[1]);
+                uvIndices.push_back(uvIndex[2]);
+                normalIndices.push_back(normalIndex[0]);
+                normalIndices.push_back(normalIndex[1]);
+                normalIndices.push_back(normalIndex[2]);
             } else { 
-                /* ignoring this line */ 
+                // ignoring this line
             }
         }
-       
-        mesh.normals.resize(mesh.vertices.size(), glm::vec3(0.0, 0.0, 0.0));
-        vector<GLushort> nb_seen(mesh.vertices.size(), 0);
-        for (vector<GLushort>::size_type i = 0; i < mesh.elements.size(); i+=3) {
-            GLushort ia = mesh.elements[i];
-            GLushort ib = mesh.elements[i+1];
-            GLushort ic = mesh.elements[i+2];
-            glm::vec3 normal = glm::normalize(glm::cross(
-                glm::vec3(mesh.vertices[ib]) - glm::vec3(mesh.vertices[ia]),
-                glm::vec3(mesh.vertices[ic]) - glm::vec3(mesh.vertices[ia])));
 
-            int v[3]; 
-            v[0] = ia; 
-            v[1] = ib; 
-            v[2] = ic;
-            for (int j = 0; j < 3; j++) {
-                GLushort cur_v = v[j];
-                nb_seen[cur_v]++;
-                if (nb_seen[cur_v] == 1) {
-                    mesh.normals[cur_v] = normal;
-                } else {
-                    // average
-                    mesh.normals[cur_v].x = mesh.normals[cur_v].x * (1.0 - 1.0 / nb_seen[cur_v]) + normal.x * 1.0 / nb_seen[cur_v];
-                    mesh.normals[cur_v].y = mesh.normals[cur_v].y * (1.0 - 1.0 / nb_seen[cur_v]) + normal.y * 1.0 / nb_seen[cur_v];
-                    mesh.normals[cur_v].z = mesh.normals[cur_v].z * (1.0 - 1.0 / nb_seen[cur_v]) + normal.z * 1.0 / nb_seen[cur_v];
-                    mesh.normals[cur_v] = glm::normalize(mesh.normals[cur_v]);
-                }
-            }
+        for (unsigned int i = 0; i < vertexIndices.size(); i++) {
+            // Get the indices of its attributes
+            unsigned int vertexIndex = vertexIndices[i];
+            unsigned int uvIndex = uvIndices[i];
+            unsigned int normalIndex = normalIndices[i];
+            
+            // Get the attributes thanks to the index
+            glm::vec3 vertex = temp_vertices[vertexIndex - 1];
+            glm::vec2 uv = temp_uvs[uvIndex - 1];
+            glm::vec3 normal = temp_normals[ normalIndex - 1];
+            
+            // Put the attributes in buffers
+            mesh.vertices.push_back(vertex);
+            mesh.uvs.push_back(uv);
+            mesh.normals.push_back(normal);
+            mesh.elements.push_back(i);
         }
     }
 
