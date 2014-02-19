@@ -1,5 +1,5 @@
 CC=g++
-FLAGS=-Wall -Wextra -Werror -O2
+FLAGS=-Wall -Wextra -Werror -O2 -std=c++11
 LIBS=-I/usr/include -lGL -lGLEW -lglut
 
 glfun: glfun.cpp utils.hpp utils.cpp mesh.cpp texture/box.c

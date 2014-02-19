@@ -1,7 +1,8 @@
 #include <fstream>
 #include <iostream>
-#include <vector>
 #include <sstream>
+#include <unordered_map>
+#include <vector>
 #include <GL/glew.h>
 #include "utils.hpp"
 
@@ -76,10 +77,10 @@ namespace utils {
             exit(1); 
         }
 
-        std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
-        std::vector<glm::vec3> temp_vertices;
-        std::vector<glm::vec2> temp_uvs;
-        std::vector<glm::vec3> temp_normals;       
+        vector<unsigned int> vertexIndices, uvIndices, normalIndices;
+        vector<glm::vec3> temp_vertices;
+        vector<glm::vec2> temp_uvs;
+        vector<glm::vec3> temp_normals;       
 
         string line;
         while (getline(in, line)) {
@@ -128,6 +129,7 @@ namespace utils {
             }
         }
 
+        unordered_map<string, unsigned int> uniques;
         for (unsigned int i = 0; i < vertexIndices.size(); i++) {
             // Get the indices of its attributes
             unsigned int vertexIndex = vertexIndices[i];
@@ -137,14 +139,23 @@ namespace utils {
             // Get the attributes thanks to the index
             glm::vec3 vertex = temp_vertices[vertexIndex - 1];
             glm::vec2 uv = temp_uvs[uvIndex - 1];
-            glm::vec3 normal = temp_normals[ normalIndex - 1];
+            glm::vec3 normal = temp_normals[normalIndex - 1];
             
             // Put the attributes in buffers
             mesh.vertices.push_back(vertex);
             mesh.uvs.push_back(uv);
             mesh.normals.push_back(normal);
-            mesh.elements.push_back(i);
+
+            // Limit elements to unique combination of vertex and normal
+            string key = to_string(vertexIndex) + to_string(normalIndex);
+            if (uniques.count(key) == 0) {
+                mesh.elements.push_back(i);
+                uniques.insert(make_pair(key, i));
+            } else {
+                mesh.elements.push_back(uniques[key]);
+            }
         }
+
     }
 
 }
