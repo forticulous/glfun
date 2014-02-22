@@ -9,6 +9,8 @@
 #include <glm/gtx/quaternion.hpp>
 #include "utils.hpp"
 
+#include "texture/suzanneTexture.c"
+
 using namespace std;
 
 const char* VERTEX_SHADER_PATH = "shader/vs.glsl";
@@ -17,11 +19,11 @@ const char* SUZANNE_OBJ_PATH = "mesh/suzanne.obj";
 const int SCREEN_WIDTH = 1028;
 const int SCREEN_HEIGHT = 768;
 
-GLuint vertexBuffer, normalBuffer, elementBuffer;
+GLuint vertexBuffer, normalBuffer, elementBuffer, uvBuffer, textureBuffer;
 GLuint program;
 GLuint vaoHandle;
-GLint uniformMVP, uniformModel, uniformMInvTrans, uniformViewInv;
-GLint attrPosition, attrNormal;
+GLint uniformMVP, uniformModel, uniformMInvTrans, uniformViewInv, uniformTexture;
+GLint attrPosition, attrNormal, attrUv;
 Mesh suzanne;
 
 void bufferData(void) {
@@ -36,6 +38,18 @@ void bufferData(void) {
     glGenBuffers(1, &normalBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
     glBufferData(GL_ARRAY_BUFFER, suzanne.normals.size() * sizeof(suzanne.normals[0]), suzanne.normals.data(), GL_STATIC_DRAW);
+
+    // uvs
+    glGenBuffers(1, &uvBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
+    glBufferData(GL_ARRAY_BUFFER, suzanne.uvs.size() * sizeof(suzanne.uvs[0]), suzanne.uvs.data(), GL_STATIC_DRAW);
+
+    // textures
+    glGenTextures(1, &textureBuffer);
+    glBindTexture(GL_TEXTURE_2D, textureBuffer);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, suzanne_tex.width, suzanne_tex.height, 
+                 0, GL_RGB, GL_UNSIGNED_BYTE, suzanne_tex.pixel_data);
 
     // elements
     glGenBuffers(1, &elementBuffer);
@@ -64,6 +78,8 @@ GLuint initProgram(void) {
     utils::logAttribStatus(attrPosition, "position");
     attrNormal  = glGetAttribLocation(program, "normal");
     utils::logAttribStatus(attrNormal, "normal");
+    attrUv  = glGetAttribLocation(program, "uv");
+    utils::logAttribStatus(attrUv, "uv");
 
     // Uniforms
     uniformMVP = glGetUniformLocation(program, "mvp");
@@ -74,6 +90,8 @@ GLuint initProgram(void) {
     utils::logUniformStatus(uniformModel, "model");
     uniformViewInv = glGetUniformLocation(program, "viewInv");
     utils::logUniformStatus(uniformViewInv, "viewInv");
+    uniformTexture = glGetUniformLocation(program, "suzanneTexture");
+    utils::logUniformStatus(uniformTexture, "suzanneTexture");
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragShader);
@@ -94,6 +112,11 @@ GLuint initVertexArray(void) {
     glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
     glEnableVertexAttribArray(attrNormal);
     glVertexAttribPointer(attrNormal, 3, GL_FLOAT, GL_FALSE, 0, 0); 
+
+    // Uvs
+    glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
+    glEnableVertexAttribArray(attrUv);
+    glVertexAttribPointer(attrUv, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
     // Elements
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
@@ -121,9 +144,12 @@ void render(void) {
 
     glUseProgram(program);
     glBindVertexArray(vaoHandle);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, textureBuffer);
 
     glDrawElements(GL_TRIANGLES, suzanne.elements.size(), GL_UNSIGNED_SHORT, 0);
 
+    glBindTexture(GL_TEXTURE_2D, 0);
     glBindVertexArray(0);
     glUseProgram(0);
 
@@ -154,6 +180,8 @@ void idle(void) {
     
     glm::mat4 mvp = projection * view * model;
     glUniformMatrix4fv(uniformMVP, 1, GL_FALSE, glm::value_ptr(mvp));
+
+    glUniform1i(uniformTexture, 0);
 
     glUseProgram(0);
 }
