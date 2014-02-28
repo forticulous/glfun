@@ -146,8 +146,8 @@ namespace utils {
             mesh.uvs.push_back(uv);
             mesh.normals.push_back(normal);
 
-            // Limit elements to unique combination of vertex and normal
-            string key = to_string(vertexIndex) + to_string(normalIndex);
+            // Limit elements to unique combination of vertex + uv + normal
+            string key = to_string(vertexIndex) + to_string(uvIndex) + to_string(normalIndex);
             if (uniques.count(key) == 0) {
                 mesh.elements.push_back(i);
                 uniques.insert(make_pair(key, i));
