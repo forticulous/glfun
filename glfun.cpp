@@ -9,13 +9,13 @@
 #include <glm/gtx/quaternion.hpp>
 #include "utils.hpp"
 
-#include "texture/suzanneTexture.c"
+#include "texture/snooTexture.c"
 
 using namespace std;
 
 const char* VERTEX_SHADER_PATH = "shader/vs.glsl";
 const char* FRAGMENT_SHADER_PATH = "shader/fs.glsl";
-const char* SUZANNE_OBJ_PATH = "mesh/suzanne.obj";
+const char* SUZANNE_OBJ_PATH = "mesh/snoo.obj";
 const int SCREEN_WIDTH = 1028;
 const int SCREEN_HEIGHT = 768;
 
@@ -48,8 +48,8 @@ void bufferData(void) {
     glGenTextures(1, &textureBuffer);
     glBindTexture(GL_TEXTURE_2D, textureBuffer);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, suzanne_tex.width, suzanne_tex.height, 
-                 0, GL_RGB, GL_UNSIGNED_BYTE, suzanne_tex.pixel_data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, snoo_tex.width, snoo_tex.height, 
+                 0, GL_RGB, GL_UNSIGNED_BYTE, snoo_tex.pixel_data);
 
     // elements
     glGenBuffers(1, &elementBuffer);
