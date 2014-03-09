@@ -141,7 +141,6 @@ void init(void) {
 
 void render(void) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     glUseProgram(program);
     glBindVertexArray(vaoHandle);
     glActiveTexture(GL_TEXTURE0);
@@ -160,7 +159,7 @@ void render(void) {
 void idle(void) {
     glUseProgram(program);
 
-    float angle = glutGet(GLUT_ELAPSED_TIME) / 1000.0 * 15;  // base 15° per second
+    float angle = glutGet(GLUT_ELAPSED_TIME) / 1000.0 * 5;  // base 15° per second
 
     glm::quat rot = glm::angleAxis(angle * 3.0f, glm::vec3(1, 0, 0));
     rot = glm::rotate(rot, angle * 2.0f, glm::vec3(0, 1, 0));
@@ -199,7 +198,7 @@ GLuint compileShader(const char* path, GLenum type, string name) {
 
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
+    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_MULTISAMPLE);
     glutInitWindowSize(SCREEN_WIDTH, SCREEN_HEIGHT);
     glutCreateWindow("Hello World");
 
@@ -208,6 +207,8 @@ int main(int argc, char** argv) {
 
     cout << "OpenGL version: " << glGetString(GL_VERSION) << endl;
     cout << "GLSL version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << endl;
+    glEnable(GL_MULTISAMPLE_ARB);
+    utils::logError();
 
     init();
 
